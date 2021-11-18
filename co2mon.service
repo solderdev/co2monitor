@@ -1,0 +1,12 @@
+[Unit]
+Description=CO2 monitor reader
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=python /home/ubuntu/co2mon/main.py
+
+[Install]
+WantedBy=multi-user.target

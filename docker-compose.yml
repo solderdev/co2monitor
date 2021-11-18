@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  influxdb:
+    image: "influxdb:1.8"
+    container_name: influxdb
+    restart: always
+    environment:
+      - INFLUXDB_LOGGING_LEVEL=warn
+      - INFLUXDB_HTTP_LOG_ENABLED=false
+      - INFLUXDB_HTTP_FLUX_ENABLED=true
+      - INFLUXDB_DATA_CACHE_MAX_MEMORY_SIZE=512m
+    expose:
+      - 8086
+    ports:
+      - 8086:8086
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+    networks:
+      - database
+  
+  grafana:
+    image: "grafana/grafana:latest"
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_NAME=Main Org.
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_AUTH_ANONYMOUS_HIDE_VERSION=true
+    ports:
+      - 3000:3000
+    networks:
+      - database
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/conf:/usr/share/grafana/conf
+#      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - influxdb
+
+  chronograf:
+    image: "chronograf:latest"
+    entrypoint: "chronograf --influxdb-url=http://influxdb:8086"
+    depends_on:
+      - influxdb
+    environment:
+      - PORT=8888
+      - INFLUXDB_USERNAME=root
+      - INFLUXDB_PASSWORD=root
+    ports:
+      - 8888:8888
+    networks:
+      - database
+
+networks:
+  database:
+#    external: true
